@@ -1,0 +1,8 @@
+Package: zycore
+Version: 1.5.0
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 9c5ca8cf3b196d4dd9b404cf55b0b3bc4f91e7e9a06d4d030ad768f87204a2d3
+Description: Provides platform independent types, macros and a fallback for environments without LibC.
+Status: install ok half-installed

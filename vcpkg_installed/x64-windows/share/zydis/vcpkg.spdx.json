@@ -1,0 +1,132 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.1/schemas/spdx-schema.json",
+  "spdxVersion": "SPDX-2.2",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentNamespace": "https://spdx.org/spdxdocs/zydis-x64-windows-4.1.0-12cf7fc7-f4e9-4b0d-814f-5aa2780ef28f",
+  "name": "zydis:x64-windows@4.1.0 3284558e933db9894729f6f0c1377e650e74f01466acf7ceb8fe1b763f25024b",
+  "creationInfo": {
+    "creators": [
+      "Tool: vcpkg-2024-11-12-eb492805e92a2c14a230f5c3deb3e89f6771c321"
+    ],
+    "created": "2024-11-14T10:30:23Z"
+  },
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "GENERATES",
+      "relatedSpdxElement": "SPDXRef-binary"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-0"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-1"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-2"
+    },
+    {
+      "spdxElementId": "SPDXRef-binary",
+      "relationshipType": "GENERATED_FROM",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-0",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-1",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-2",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    }
+  ],
+  "packages": [
+    {
+      "name": "zydis",
+      "SPDXID": "SPDXRef-port",
+      "versionInfo": "4.1.0",
+      "downloadLocation": "git+https://github.com/microsoft/vcpkg@a08c5c766c41651280cb783e5dd0a8a5764f9700",
+      "homepage": "https://zydis.re",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "description": "Fast and lightweight x86/x86-64 disassembler library.",
+      "comment": "This is the port (recipe) consumed by vcpkg."
+    },
+    {
+      "name": "zydis:x64-windows",
+      "SPDXID": "SPDXRef-binary",
+      "versionInfo": "3284558e933db9894729f6f0c1377e650e74f01466acf7ceb8fe1b763f25024b",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "comment": "This is a binary package built by vcpkg."
+    },
+    {
+      "SPDXID": "SPDXRef-resource-1",
+      "name": "zyantific/zydis",
+      "downloadLocation": "git+https://github.com/zyantific/zydis@v4.1.0",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "e07add4d43768ded02a238911fde6e74d2391abf8df282f774fca1a8c3fca3e97b03e90e0f3c7c0f3c75485fb29c0be4071d5e5b2e23dd5b8b1a864e3b713fbc"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "./C:/Users/Deniska/AppData/Local/vcpkg/registries/git-trees/a08c5c766c41651280cb783e5dd0a8a5764f9700/portfile.cmake",
+      "SPDXID": "SPDXRef-file-0",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "57ce484d8831a8f6ab19fedd1450bd575ec9fe0753433831b14d2a41ffd8d82f"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/Deniska/AppData/Local/vcpkg/registries/git-trees/a08c5c766c41651280cb783e5dd0a8a5764f9700/vcpkg.json",
+      "SPDXID": "SPDXRef-file-1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "40615a16b77ed2c6cf4f8508eb484198a448fc813c87ee871c8dc8d0c9e0aa17"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/Deniska/AppData/Local/vcpkg/registries/git-trees/a08c5c766c41651280cb783e5dd0a8a5764f9700/zycore.patch",
+      "SPDXID": "SPDXRef-file-2",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "080690aa85fa91182f9ee0129eba97fe1775fab3860d54cf6f319562ff02faaf"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    }
+  ]
+}

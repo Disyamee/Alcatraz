@@ -3,6 +3,7 @@
 #include "Zydis/Zydis.h"
 #include "../pdbparser/pdbparser.h"
 
+#include <bit>
 #include <map>
 #include <string>
 #include <algorithm>
@@ -33,6 +34,34 @@ private:
 	std::vector<function_t>functions;
 
 	uint32_t total_size_used;
+
+	// IAT obfuscation
+	struct iat_entry_t {
+		uint64_t buffer_address;  // buffer address of IAT slot
+		std::string dll_name;
+		std::string func_name;
+		uint64_t stub_address;    // filled by write_iat_stubs
+	};
+
+	struct iat_patch_t {
+		int func_id;
+		int inst_id;
+		int iat_index;  // index into iat_map
+		bool is_call;
+	};
+
+	std::vector<iat_entry_t> iat_map;
+	std::vector<iat_patch_t> iat_patches;
+	uint64_t loadlib_iat_addr;   // buffer address of LoadLibraryA IAT slot
+	uint64_t getproc_iat_addr;   // buffer address of GetProcAddress IAT slot
+
+	void build_iat_map();
+	void write_iat_stubs(PIMAGE_SECTION_HEADER new_section);
+	void patch_iat_calls();
+
+	// String encryption
+	uint32_t string_area_offset;
+	bool encrypt_strings(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter, PIMAGE_SECTION_HEADER new_section);
 
 	void add_custom_entry(PIMAGE_SECTION_HEADER new_section);
 
@@ -129,6 +158,8 @@ public:
 		bool mutateobf = true;
 		bool leaobf = true;
 		bool antidisassembly = true;
+		bool iatobf = true;
+		bool stringenc = true;
 		bool has_jumptables = false;
 	};
 };

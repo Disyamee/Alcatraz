@@ -1,0 +1,110 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.1/schemas/spdx-schema.json",
+  "spdxVersion": "SPDX-2.2",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentNamespace": "https://spdx.org/spdxdocs/zycore-x64-windows-1.5.0-576c5423-33eb-44ce-8b5b-b3496d1fce9c",
+  "name": "zycore:x64-windows@1.5.0 9c5ca8cf3b196d4dd9b404cf55b0b3bc4f91e7e9a06d4d030ad768f87204a2d3",
+  "creationInfo": {
+    "creators": [
+      "Tool: vcpkg-2024-11-12-eb492805e92a2c14a230f5c3deb3e89f6771c321"
+    ],
+    "created": "2024-11-14T10:30:17Z"
+  },
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "GENERATES",
+      "relatedSpdxElement": "SPDXRef-binary"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-0"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-1"
+    },
+    {
+      "spdxElementId": "SPDXRef-binary",
+      "relationshipType": "GENERATED_FROM",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-0",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-1",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    }
+  ],
+  "packages": [
+    {
+      "name": "zycore",
+      "SPDXID": "SPDXRef-port",
+      "versionInfo": "1.5.0",
+      "downloadLocation": "git+https://github.com/microsoft/vcpkg@226a1abf7ca1f76cdea8707e06158b1f099417e0",
+      "homepage": "https://github.com/zyantific/zycore-c",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "description": "Provides platform independent types, macros and a fallback for environments without LibC.",
+      "comment": "This is the port (recipe) consumed by vcpkg."
+    },
+    {
+      "name": "zycore:x64-windows",
+      "SPDXID": "SPDXRef-binary",
+      "versionInfo": "9c5ca8cf3b196d4dd9b404cf55b0b3bc4f91e7e9a06d4d030ad768f87204a2d3",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "comment": "This is a binary package built by vcpkg."
+    },
+    {
+      "SPDXID": "SPDXRef-resource-1",
+      "name": "zyantific/zycore-c",
+      "downloadLocation": "git+https://github.com/zyantific/zycore-c@v1.5.0",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "f57af4e5c6f919299e673ff4afd19a7e3cc01acaf5cde73db47063eb30881487fa33d2fd5707a3e55a8cd8df4bb4b668bc7273b8b8b5eebea1e78c1c36f715b2"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "./C:/Users/Deniska/AppData/Local/vcpkg/registries/git-trees/226a1abf7ca1f76cdea8707e06158b1f099417e0/portfile.cmake",
+      "SPDXID": "SPDXRef-file-0",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5ec3cb9cd7249f939047fcdc99be7f3770afd7daa542c8b7fad9b61253ef8e7a"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/Deniska/AppData/Local/vcpkg/registries/git-trees/226a1abf7ca1f76cdea8707e06158b1f099417e0/vcpkg.json",
+      "SPDXID": "SPDXRef-file-1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2dfc9a40e0c756bf2dc0215b14b6d27e95c296270f0164fa36a628dab3e1217e"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    }
+  ]
+}

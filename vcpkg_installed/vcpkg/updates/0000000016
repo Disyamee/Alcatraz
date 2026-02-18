@@ -1,0 +1,8 @@
+Package: zydis
+Version: 4.1.0
+Depends: vcpkg-cmake, vcpkg-cmake-config, zycore
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 3284558e933db9894729f6f0c1377e650e74f01466acf7ceb8fe1b763f25024b
+Description: Fast and lightweight x86/x86-64 disassembler library.
+Status: install ok half-installed

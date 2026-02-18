@@ -147,6 +147,7 @@
     <ClCompile Include="obfuscator\passes\antidisassembly.cpp" />
     <ClCompile Include="obfuscator\passes\lea.cpp" />
     <ClCompile Include="obfuscator\passes\mov.cpp" />
+    <ClCompile Include="obfuscator\passes\stringenc.cpp" />
     <ClCompile Include="pdbparser\pdbparser.cpp" />
     <ClCompile Include="pe\pe.cpp" />
   </ItemGroup>

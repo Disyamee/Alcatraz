@@ -144,6 +144,7 @@
     <ClCompile Include="..\Alcatraz\obfuscator\passes\antidisassembly.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\passes\lea.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\passes\mov.cpp" />
+    <ClCompile Include="..\Alcatraz\obfuscator\passes\stringenc.cpp" />
     <ClCompile Include="..\Alcatraz\pdbparser\pdbparser.cpp" />
     <ClCompile Include="..\Alcatraz\pe\pe.cpp" />
     <ClCompile Include="gui\gui.cpp" />

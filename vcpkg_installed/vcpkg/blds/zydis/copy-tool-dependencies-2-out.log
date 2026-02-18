@@ -1,0 +1,14 @@
+[33;1mVERBOSE: Resolving base path C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/pkgs/zydis_x64-windows/tools/zydis/Zydis.dll...[0m
+[33;1mVERBOSE: Resolving C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/pkgs/zydis_x64-windows/tools/zydis/Zydis.dll...[0m
+[33;1mVERBOSE:   VCRUNTIME140.dll: C:\Users\Deniska\Downloads\Alcatraz-master\Alcatraz-master\vcpkg_installed\x64-windows\bin\VCRUNTIME140.dll not found[0m
+[33;1mVERBOSE:   api-ms-win-crt-runtime-l1-1-0.dll: C:\Users\Deniska\Downloads\Alcatraz-master\Alcatraz-master\vcpkg_installed\x64-windows\bin\api-ms-win-crt-runtime-l1-1-0.dll not found[0m
+[33;1mVERBOSE:   KERNEL32.dll: C:\Users\Deniska\Downloads\Alcatraz-master\Alcatraz-master\vcpkg_installed\x64-windows\bin\KERNEL32.dll not found[0m
+[33;1mVERBOSE: Done Resolving C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/pkgs/zydis_x64-windows/tools/zydis/Zydis.dll.[0m
+[33;1mVERBOSE: 
+Name                           Value
+----                           -----
+api-ms-win-crt-runtime-l1-1-0… True
+VCRUNTIME140.dll               True
+KERNEL32.dll                   True
+
+[0m

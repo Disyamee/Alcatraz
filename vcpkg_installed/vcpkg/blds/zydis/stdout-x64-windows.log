@@ -1,0 +1,10 @@
+-- Downloading https://github.com/zyantific/zydis/archive/v4.1.0.tar.gz -> zyantific-zydis-v4.1.0.tar.gz...
+-- Extracting source C:/Users/Deniska/AppData/Local/vcpkg/downloads/zyantific-zydis-v4.1.0.tar.gz
+-- Applying patch zycore.patch
+-- Using source at C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/blds/zydis/src/v4.1.0-1fdb2423e4.clean
+-- Found external ninja('1.11.0').
+-- Configuring x64-windows
+-- Building x64-windows-dbg
+-- Building x64-windows-rel
+-- Installing: C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/pkgs/zydis_x64-windows/share/zydis/copyright
+-- Performing post-build validation

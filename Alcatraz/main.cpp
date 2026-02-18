@@ -25,7 +25,16 @@ int main(int args, char* argv[]) {
 		auto functions = pdb.parse_functions();
 		std::cout << "Successfully parsed " << functions.size() << " function(s)" << std::endl;
 
-		auto new_section = pe.create_section(".0Dev", 10000000, IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_CNT_CODE);
+		uint32_t total_func_size = 0;
+		for (auto& f : functions) {
+			if (f.obfuscate && f.size >= 5)
+				total_func_size += f.size;
+		}
+		uint32_t section_size = (total_func_size * 12) + 0x100000;
+		if (section_size < 10000000)
+			section_size = 10000000;
+
+		auto new_section = pe.create_section(".0Dev", section_size, IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_CNT_CODE);
 
 		obfuscator obf(&pe);
 		obf.create_functions(functions);

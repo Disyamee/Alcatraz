@@ -7,8 +7,14 @@ bool obfuscator::obfuscate_add(std::vector<obfuscator::function_t>::iterator& fu
 		if (instruction->zyinstr.operands[0].size < 32)
 			return true;
 
-		auto first = lookupmap.find(instruction->zyinstr.operands[0].reg.value)->second;
-		auto second = lookupmap.find(instruction->zyinstr.operands[1].reg.value)->second;
+		auto first_it = lookupmap.find(instruction->zyinstr.operands[0].reg.value);
+		auto second_it = lookupmap.find(instruction->zyinstr.operands[1].reg.value);
+
+		if (first_it == lookupmap.end() || second_it == lookupmap.end())
+			return true;
+
+		auto first = first_it->second;
+		auto second = second_it->second;
 
 		if (first == second)
 			return true;

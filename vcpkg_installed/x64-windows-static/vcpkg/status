@@ -1,0 +1,41 @@
+Package: vcpkg-cmake-config
+Version: 2024-05-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 1b9045d7eca55a9ce32e8f2bfa319144678ff1dcf8a6e59c2db6add3b255ecde
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2024-04-18
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 17d26ed613d72b4c3420661ee8da07492a6a8519d8b6ee545ce201dd6e6d4bc6
+Status: install ok installed
+
+Package: asmjit
+Version: 2023-03-25
+Depends: vcpkg-cmake:x64-windows, vcpkg-cmake-config:x64-windows
+Architecture: x64-windows-static
+Multi-Arch: same
+Abi: aebbc39c5de61a32531b106129f9de1a658fd7dea95dca8f1b15e07148da5447
+Description: Complete x86/x64 JIT and Remote Assembler for C++
+Status: install ok installed
+
+Package: zycore
+Version: 1.5.0
+Depends: vcpkg-cmake:x64-windows, vcpkg-cmake-config:x64-windows
+Architecture: x64-windows-static
+Multi-Arch: same
+Abi: 9f4851dac66179b05f4a9c4e59504732a7c4ad3225a4b7f8dad5b349185899c6
+Description: Provides platform independent types, macros and a fallback for environments without LibC.
+Status: install ok installed
+
+Package: zydis
+Version: 4.1.0
+Depends: vcpkg-cmake:x64-windows, vcpkg-cmake-config:x64-windows, zycore
+Architecture: x64-windows-static
+Multi-Arch: same
+Abi: f7dd467efd9ce376421f6d357a6dba94b3a3b5bb6ac419d74964ed1cc745cb37
+Description: Fast and lightweight x86/x86-64 disassembler library.
+Status: install ok installed
+

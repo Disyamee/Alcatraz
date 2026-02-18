@@ -1,0 +1,9 @@
+-- Downloading https://github.com/zyantific/zycore-c/archive/v1.5.0.tar.gz -> zyantific-zycore-c-v1.5.0.tar.gz...
+-- Extracting source C:/Users/Deniska/AppData/Local/vcpkg/downloads/zyantific-zycore-c-v1.5.0.tar.gz
+-- Using source at C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/blds/zycore/src/v1.5.0-7af075296a.clean
+-- Found external ninja('1.11.0').
+-- Configuring x64-windows
+-- Building x64-windows-dbg
+-- Building x64-windows-rel
+-- Installing: C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/pkgs/zycore_x64-windows/share/zycore/copyright
+-- Performing post-build validation

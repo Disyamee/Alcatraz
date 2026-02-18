@@ -11,7 +11,13 @@ int obfuscator::function_iterator = 0;
 obfuscator::obfuscator(pe64* pe) {
 
 	this->pe = pe;
-	
+	this->total_size_used = 0;
+	this->loadlib_iat_addr = 0;
+	this->getproc_iat_addr = 0;
+	this->string_area_offset = 4;
+	instruction_id = 0;
+	function_iterator = 0;
+
 	if (!ZYAN_SUCCESS(ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64)))
 		throw std::runtime_error("failed to init decoder");
 
@@ -50,6 +56,8 @@ void obfuscator::create_functions(std::vector<pdbparser::sym_func>functions) {
 		new_function.mutateobf = function.mutateobf;
 		new_function.leaobf = function.leaobf;
 		new_function.antidisassembly = function.antidisassembly;
+		new_function.iatobf = function.iatobf;
+		new_function.stringenc = function.stringenc;
 
 		std::vector <uint64_t> runtime_addresses;
 
@@ -57,7 +65,7 @@ void obfuscator::create_functions(std::vector<pdbparser::sym_func>functions) {
 
 			instruction_t new_instruction{};
 			new_instruction.runtime_address = (uint64_t)address_to_analyze + offset;
-			new_instruction.load(function_iterator, zyinstruction, new_instruction.runtime_address);
+			new_instruction.load(new_function.func_id, zyinstruction, new_instruction.runtime_address);
 			if (offset == 0)
 				new_instruction.is_first_instruction = true;
 			new_function.instructions.push_back(new_instruction);
@@ -195,7 +203,7 @@ void obfuscator::relocate(PIMAGE_SECTION_HEADER new_section) {
 
 	auto base = pe->get_buffer()->data() + 0x1000;
 
-	int used_memory = 0;
+	uint32_t used_memory = 0;
 
 	for (auto func = functions.begin(); func != functions.end(); ++func) {
 
@@ -296,87 +304,117 @@ uint16_t rel8_to16(ZydisMnemonic mnemonic) {
 
 bool obfuscator::fix_relative_jmps(function_t* func) {
 
-	for (auto instruction = func->instructions.begin(); instruction != func->instructions.end(); instruction++) {
+	bool changed = true;
+	while (changed) {
+		changed = false;
 
-		if (instruction->isjmpcall && instruction->relative.target_inst_id != -1) {
+		for (auto instruction = func->instructions.begin(); instruction != func->instructions.end(); instruction++) {
 
-			instruction_t inst{};
+			if (instruction->isjmpcall && instruction->relative.target_inst_id != -1) {
 
-			if (!this->find_instruction_by_id(instruction->relative.target_func_id, instruction->relative.target_inst_id, &inst)) {
-				return false;
-			}
+				instruction_t inst{};
 
-
-			switch (instruction->relative.size) {
-			case 8: {
-				signed int distance = inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length;
-				if (distance > 127 || distance < -128) {
-
-					if (instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_JMP) {
-
-
-						instruction->raw_bytes.resize(5);
-						*(uint8_t*)(instruction->raw_bytes.data()) = 0xE9;
-						*(int32_t*)(&instruction->raw_bytes.data()[1]) = (int32_t)(inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length);
-
-						instruction->reload();
-
-						for (auto instruction2 = instruction; instruction2 != func->instructions.end(); instruction2++) {
-							instruction2->relocated_address += 3;
-						}
-
-						return this->fix_relative_jmps(func);
-
-					}
-					else {
-
-						uint16_t new_opcode = rel8_to16(instruction->zyinstr.info.mnemonic);
-
-						instruction->raw_bytes.resize(6);
-						*(uint16_t*)(instruction->raw_bytes.data()) = new_opcode;
-						*(int32_t*)(&instruction->raw_bytes.data()[2]) = (int32_t)(inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length);
-
-						instruction->reload();
-
-						for (auto instruction2 = instruction; instruction2 != func->instructions.end(); ++instruction2) {
-							instruction2->relocated_address += 4;
-						}
-
-						return this->fix_relative_jmps(func);
-					}
-
-				}
-				break;
-			}
-
-			case 16: {
-				signed int distance = inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length;
-				if (distance > 32767 || distance < -32768)
-				{
-					//Unlikely, but:
-					//Condition met? Jmp else Jmp (insert 2 jmps instead of converting conditional jump)
+				if (!this->find_instruction_by_id(instruction->relative.target_func_id, instruction->relative.target_inst_id, &inst)) {
+					printf("[DEBUG] fix_relative_jmps FAIL: find_instruction_by_id failed\n");
+					printf("  func='%s' func_id=%d inst_id=%d\n", func->name.c_str(), func->func_id, instruction->inst_id);
+					printf("  target_func_id=%d target_inst_id=%d\n", instruction->relative.target_func_id, instruction->relative.target_inst_id);
+					printf("  isjmpcall=%d has_relative=%d rel.size=%u rel.offset=%u\n", instruction->isjmpcall, instruction->has_relative, instruction->relative.size, instruction->relative.offset);
+					printf("  raw_bytes[0..3]: %02X %02X %02X %02X  length=%d\n",
+						instruction->raw_bytes.size() > 0 ? instruction->raw_bytes[0] : 0,
+						instruction->raw_bytes.size() > 1 ? instruction->raw_bytes[1] : 0,
+						instruction->raw_bytes.size() > 2 ? instruction->raw_bytes[2] : 0,
+						instruction->raw_bytes.size() > 3 ? instruction->raw_bytes[3] : 0,
+						instruction->zyinstr.info.length);
+					instruction->print();
 					return false;
 				}
-				break;
-			}
-			case 32: {
-				signed int distance = inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length;
-				if (distance > 2147483647 || distance < -2147483648)
+
+
+				switch (instruction->relative.size) {
+				case 8: {
+					signed int distance = inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length;
+					if (distance > 127 || distance < -128) {
+
+						if (instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_JMP) {
+
+							instruction->raw_bytes.resize(5);
+							*(uint8_t*)(instruction->raw_bytes.data()) = 0xE9;
+							*(int32_t*)(&instruction->raw_bytes.data()[1]) = (int32_t)(inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length);
+
+							instruction->reload();
+
+							for (auto instruction2 = instruction; instruction2 != func->instructions.end(); instruction2++) {
+								instruction2->relocated_address += 3;
+							}
+
+							changed = true;
+							break;
+						}
+						else {
+
+							uint16_t new_opcode = rel8_to16(instruction->zyinstr.info.mnemonic);
+
+							if (new_opcode == 0) {
+								printf("[DEBUG] fix_relative_jmps FAIL: rel8_to16 returned 0\n");
+								printf("  func='%s' mnemonic=%d rel.size=%u\n", func->name.c_str(), instruction->zyinstr.info.mnemonic, instruction->relative.size);
+								instruction->print();
+								return false;
+							}
+
+							instruction->raw_bytes.resize(6);
+							*(uint16_t*)(instruction->raw_bytes.data()) = new_opcode;
+							*(int32_t*)(&instruction->raw_bytes.data()[2]) = (int32_t)(inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length);
+
+							instruction->reload();
+
+							for (auto instruction2 = instruction; instruction2 != func->instructions.end(); ++instruction2) {
+								instruction2->relocated_address += 4;
+							}
+
+							changed = true;
+							break;
+						}
+
+					}
+					break;
+				}
+
+				case 16: {
+					signed int distance = inst.relocated_address - instruction->relocated_address - instruction->zyinstr.info.length;
+					if (distance > 32767 || distance < -32768)
+					{
+						printf("[DEBUG] fix_relative_jmps FAIL: rel16 out of range, distance=%d\n", distance);
+						printf("  func='%s' inst_id=%d\n", func->name.c_str(), instruction->inst_id);
+						instruction->print();
+						return false;
+					}
+					break;
+				}
+				case 32: {
+					break;
+				}
+				default:
 				{
-					//Shouldn't be possible
+					printf("[DEBUG] fix_relative_jmps FAIL: unexpected rel.size=%u\n", instruction->relative.size);
+					printf("  func='%s' inst_id=%d isjmpcall=%d has_relative=%d\n", func->name.c_str(), instruction->inst_id, instruction->isjmpcall, instruction->has_relative);
+					printf("  target_func_id=%d target_inst_id=%d\n", instruction->relative.target_func_id, instruction->relative.target_inst_id);
+					printf("  raw_bytes[0..5]: %02X %02X %02X %02X %02X %02X  length=%d\n",
+						instruction->raw_bytes.size() > 0 ? instruction->raw_bytes[0] : 0,
+						instruction->raw_bytes.size() > 1 ? instruction->raw_bytes[1] : 0,
+						instruction->raw_bytes.size() > 2 ? instruction->raw_bytes[2] : 0,
+						instruction->raw_bytes.size() > 3 ? instruction->raw_bytes[3] : 0,
+						instruction->raw_bytes.size() > 4 ? instruction->raw_bytes[4] : 0,
+						instruction->raw_bytes.size() > 5 ? instruction->raw_bytes[5] : 0,
+						instruction->zyinstr.info.length);
+					instruction->print();
 					return false;
 				}
-				break;
+
+				}
+
+				if (changed)
+					break;
 			}
-			default:
-			{
-				return false;
-			}
-
-			}
-
-
-
 		}
 	}
 	return true;
@@ -388,8 +426,10 @@ bool obfuscator::convert_relative_jmps() {
 		if (func->has_jumptables)
 			continue;
 
-		if (!this->fix_relative_jmps(&(*func)))
+		if (!this->fix_relative_jmps(&(*func))) {
+			printf("[DEBUG] convert_relative_jmps failed on func '%s' (id=%d, %zu instructions)\n", func->name.c_str(), func->func_id, func->instructions.size());
 			return false;
+		}
 	}
 	return true;
 }
@@ -538,6 +578,8 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 	if (!this->analyze_functions())
 		throw std::runtime_error("couldn't analyze functions");
 
+	this->build_iat_map();
+
 	*(uint32_t*)(pe->get_buffer()->data() + new_section->VirtualAddress) = _rotl(pe->get_nt()->OptionalHeader.AddressOfEntryPoint, pe->get_nt()->FileHeader.TimeDateStamp) ^ pe->get_nt()->OptionalHeader.SizeOfStackCommit;
 
 	code.init(rt.environment());
@@ -562,7 +604,7 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 
 
 			//Obfuscate IAT
-			if (instruction->isjmpcall && instruction->relative.target_inst_id == -1)
+			if (func->iatobf && instruction->isjmpcall && instruction->relative.target_inst_id == -1)
 				this->obfuscate_iat_call(func, instruction);
 
 
@@ -580,8 +622,14 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 			}
 
 
+			//String encryption (before LEA obfuscation)
+			bool string_encrypted = false;
+			if (func->stringenc && instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_LEA && instruction->has_relative) {
+				string_encrypted = this->encrypt_strings(func, instruction, new_section);
+			}
+
 			//Obfuscate LEA
-			if (func->leaobf) {
+			if (func->leaobf && !string_encrypted) {
 				if (instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_LEA && instruction->has_relative)
 					this->obfuscsate_lea(func, instruction);
 			}
@@ -623,6 +671,12 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 		throw std::runtime_error("couldn't apply relocs");
 
 	this->compile(new_section);
+
+	if (!iat_patches.empty()) {
+		this->write_iat_stubs(new_section);
+		this->patch_iat_calls();
+	}
+
 	if (obfuscate_entry_point)
 		this->add_custom_entry(new_section);
 }

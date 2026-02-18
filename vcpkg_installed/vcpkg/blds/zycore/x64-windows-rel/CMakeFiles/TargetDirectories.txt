@@ -1,0 +1,6 @@
+C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/blds/zycore/x64-windows-rel/CMakeFiles/Zycore.dir
+C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/blds/zycore/x64-windows-rel/CMakeFiles/edit_cache.dir
+C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/blds/zycore/x64-windows-rel/CMakeFiles/rebuild_cache.dir
+C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/blds/zycore/x64-windows-rel/CMakeFiles/list_install_components.dir
+C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/blds/zycore/x64-windows-rel/CMakeFiles/install.dir
+C:/Users/Deniska/Downloads/Alcatraz-master/Alcatraz-master/vcpkg_installed/vcpkg/blds/zycore/x64-windows-rel/CMakeFiles/install/local.dir

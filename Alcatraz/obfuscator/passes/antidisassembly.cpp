@@ -2,11 +2,19 @@
 
 bool obfuscator::obfuscate_ff(std::vector<obfuscator::function_t>::iterator& function, std::vector<obfuscator::instruction_t>::iterator& instruction) {
 
-	instruction_t conditional_jmp{}; conditional_jmp.load(function->func_id, { 0xEB });
-	conditional_jmp.isjmpcall = false;
-	conditional_jmp.has_relative = false;
-	instruction = function->instructions.insert(instruction, conditional_jmp);
-	instruction++;
+	// EB 01 = JMP +1 (skips over the dead byte to the original FF instruction)
+	instruction_t jmp_over{}; jmp_over.load(function->func_id, { 0xEB, 0x01 });
+	jmp_over.isjmpcall = false;
+	jmp_over.has_relative = false;
+
+	// Dead byte: INT3 (never executed, confuses linear disassembly)
+	instruction_t dead_byte{}; dead_byte.load(function->func_id, { 0xCC });
+	dead_byte.isjmpcall = false;
+	dead_byte.has_relative = false;
+
+	instruction = function->instructions.insert(instruction, dead_byte);
+	instruction = function->instructions.insert(instruction, jmp_over);
+	instruction += 2;
 
 	return true;
 }

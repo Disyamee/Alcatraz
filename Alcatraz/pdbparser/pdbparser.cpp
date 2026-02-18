@@ -83,6 +83,7 @@ std::vector<pdbparser::sym_func>pdbparser::parse_functions() {
 	callbstr.base = reinterpret_cast<DWORD64>(this->module_base);
 	callbstr.collector = &functions;
 	static int iterator = 0;
+	iterator = 0;
 	const auto collect_callback =
 		[](PSYMBOL_INFO psym_info, ULONG sym_size, PVOID collector) {
 		if (psym_info->Tag == SymTagFunction) {

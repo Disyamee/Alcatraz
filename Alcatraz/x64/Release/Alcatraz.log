@@ -1,72 +1,142 @@
-﻿  main.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\main.cpp(20,13): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+﻿  The vcpkg manifest was disabled, but we found a manifest file in G:\cpp\Alcatraz-master\Alcatraz-master\. You may want to enable vcpkg manifests in your properties page or pass /p:VcpkgEnableManifest=true to the msbuild invocation.
+  main.cpp
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'main.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'main.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\main.cpp(20,13): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   cfflattener.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/misc/cfflattener.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/misc/cfflattener.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
   custom_entry.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/misc/custom_entry.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/misc/custom_entry.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
   iat.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/misc/iat.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/misc/iat.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
   obfuscator.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(67,75): warning C4244: '=': conversion from 'uint64_t' to 'int', possible loss of data
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(89,160): warning C4244: 'argument': conversion from '_To' to 'uint32_t', possible loss of data
-          with
-          [
-              _To=uint64_t
-          ]
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(99,95): warning C4244: '=': conversion from 'uint64_t' to 'DWORD', possible loss of data
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(312,25): warning C4244: 'initializing': conversion from 'uint64_t' to 'int', possible loss of data
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(353,25): warning C4244: 'initializing': conversion from 'uint64_t' to 'int', possible loss of data
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(363,25): warning C4244: 'initializing': conversion from 'uint64_t' to 'int', possible loss of data
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(521,17): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(526,22): warning C4018: '<': signed/unsigned mismatch
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(541,169): warning C4244: '=': conversion from 'ULONGLONG' to 'uint32_t', possible loss of data
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(547,9): warning C4477: 'printf' : format string '%i' requires an argument of type 'int', but variadic argument 1 has type 'unsigned __int64'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.cpp(547,9): message : consider using '%zi' in the format string
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/obfuscator.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/obfuscator.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(74,75): warning C4244: '=': conversion from 'uint64_t' to 'int', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(96,160): warning C4244: 'argument': conversion from '_To' to 'uint32_t', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(96,160): warning C4244:         with
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(96,160): warning C4244:         [
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(96,160): warning C4244:             _To=uint64_t
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(96,160): warning C4244:         ]
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(106,95): warning C4244: '=': conversion from 'uint64_t' to 'DWORD', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(323,26): warning C4244: 'initializing': conversion from 'uint64_t' to 'int', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(368,26): warning C4244: 'initializing': conversion from 'uint64_t' to 'int', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(529,17): warning C4244: 'initializing': conversion from 'uint64_t' to 'uint32_t', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(534,22): warning C4018: '<': signed/unsigned mismatch
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(551,169): warning C4244: '=': conversion from 'ULONGLONG' to 'uint32_t', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(557,9): warning C4477: 'printf' : format string '%i' requires an argument of type 'int', but variadic argument 1 has type 'unsigned __int64'
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.cpp(557,9):
+      consider using '%zi' in the format string
+  
   add.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\passes\add.cpp(31,83): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/add.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/add.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\passes\add.cpp(37,81): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
   antidisassembly.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/antidisassembly.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/antidisassembly.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
   lea.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\passes\lea.cpp(30,84): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/lea.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/lea.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\passes\lea.cpp(30,82): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
   mov.cpp
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(88,23): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(15): message : see declaration of 'obfuscator::instruction_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(117,20): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\obfuscator.h(16): message : see declaration of 'obfuscator::function_t'
-C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\Alcatraz\obfuscator\passes\mov.cpp(79,84): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/mov.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/mov.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\passes\mov.cpp(79,82): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
+  stringenc.cpp
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(115,9): warning C4240: nonstandard extension used: access to 'obfuscator::instruction_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/stringenc.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(16,9):
+      see declaration of 'obfuscator::instruction_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(144,9): warning C4240: nonstandard extension used: access to 'obfuscator::function_t' now defined to be 'public', previously it was defined to be 'private'
+  (compiling source file 'obfuscator/passes/stringenc.cpp')
+      G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\obfuscator.h(17,9):
+      see declaration of 'obfuscator::function_t'
+  
+G:\cpp\Alcatraz-master\Alcatraz-master\Alcatraz\obfuscator\passes\stringenc.cpp(87,80): warning C4267: 'argument': conversion from 'size_t' to 'uint32_t', possible loss of data
   pdbparser.cpp
   pe.cpp
   Generating code
-  332 of 1920 functions (17.3%) were compiled, the rest were copied from previous compilation.
-    199 functions were new in current compilation
-    11 functions had inline decision re-evaluated but remain unchanged
+  2093 of 2124 functions (98.5%) were compiled, the rest were copied from previous compilation.
+    180 functions were new in current compilation
+    2 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  Alcatraz.vcxproj -> C:\Users\bsodcloud\Desktop\Alcatraz\Alcatraz\x64\Release\Alcatraz-con.exe
+  Alcatraz.vcxproj -> G:\cpp\Alcatraz-master\Alcatraz-master\x64\Release\Alcatraz-con.exe
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.

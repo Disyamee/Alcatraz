@@ -32,7 +32,9 @@ public:
 		bool mutateobf = true;
 		bool leaobf = true;
 		bool antidisassembly = true;
-		
+		bool iatobf = true;
+		bool stringenc = true;
+
 	};
 
 	pdbparser(pe64* pe);
