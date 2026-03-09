@@ -28,5 +28,9 @@ public:
 
 	void save_to_disk(std::string path, PIMAGE_SECTION_HEADER new_section, uint32_t total_size);
 
+	void strip_debug_directory();
+	void erase_rich_header();
+	void randomize_timestamp();
+
 	std::string get_path();
 };

@@ -13,6 +13,7 @@ using namespace asmjit;
 
 class obfuscator {
 private:
+	static constexpr uint32_t kReservedPrefixSize = 0x10000;
 	struct instruction_t;
 	struct function_t;
 	pe64* pe;
@@ -93,7 +94,7 @@ private:
 	bool obfuscate_iat_call(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
 
 	__declspec(safebuffers)  int custom_dll_main(HINSTANCE instance, DWORD fdwreason, LPVOID reserved); void custom_dll_main_end();
-	__declspec(safebuffers)  int custom_main(int argc, char* argv[]); void custom_main_end();
+	__declspec(safebuffers)  void custom_main(); void custom_main_end();
 
 	/*
 		These are our actual obfuscation passes
@@ -163,5 +164,8 @@ public:
 		bool has_jumptables = false;
 	};
 };
+
+// Return pointer and size of the position-independent entry stub (for copying into target PE).
+const uint8_t* get_custom_entry_code(size_t* out_size);
 
 

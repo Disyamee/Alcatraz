@@ -1,6 +1,7 @@
 #include "../obfuscator.h"
 
 #include <algorithm>
+#include <random>
 
 void obfuscator::build_iat_map() {
 	auto nt = pe->get_nt();
@@ -124,62 +125,109 @@ void obfuscator::write_iat_stubs(PIMAGE_SECTION_HEADER new_section) {
 		needs_stub[patch.iat_index] = true;
 	}
 
+	std::random_device rd;
+	std::default_random_engine rng(rd());
+	std::uniform_int_distribution<int> key_dist(1, 255);
+
 	for (size_t i = 0; i < iat_map.size(); i++) {
 		if (!needs_stub[i]) continue;
 
 		auto& entry = iat_map[i];
 
-		// Each stub: 70 bytes code + 8 bytes cached_ptr + strings
-		//
-		// Stub layout:
-		// [0]  mov rax, [rip+63]          7   → cached_ptr at offset 70
-		// [7]  test rax, rax              3
-		// [10] jnz +56                    2   → go at offset 68
-		// [12] push rcx                   1
-		// [13] push rdx                   1
-		// [14] push r8                    2
-		// [16] push r9                    2
-		// [18] sub rsp, 0x28              4
-		// [22] lea rcx, [rip+49]          7   → dll_name at offset 78
-		// [29] call [rip+X3]              6   → LoadLibraryA IAT slot
-		// [35] mov rcx, rax               3
-		// [38] lea rdx, [rip+X4]          7   → func_name
-		// [45] call [rip+X5]              6   → GetProcAddress IAT slot
-		// [51] mov [rip+12], rax          7   → cached_ptr at offset 70
-		// [58] add rsp, 0x28              4
-		// [62] pop r9                     2
-		// [64] pop r8                     2
-		// [66] pop rdx                    1
-		// [67] pop rcx                    1
-		// [68] jmp rax                    2   (go label)
-		// --- data at offset 70 ---
-		// [70] cached_ptr: dq 0           8
-		// [78] dll_name: "...\0"          N+1
-		// [78+N+1] func_name: "...\0"     M+1
-
 		uint32_t dll_name_len = (uint32_t)entry.dll_name.size();
 		uint32_t func_name_len = (uint32_t)entry.func_name.size();
-		uint32_t stub_size = 70 + 8 + dll_name_len + 1 + func_name_len + 1;
+
+		// Generate 4-byte XOR keys (no zero bytes)
+		uint8_t dll_key[4], func_key[4];
+		for (int k = 0; k < 4; k++) {
+			dll_key[k] = (uint8_t)key_dist(rng);
+			func_key[k] = (uint8_t)key_dist(rng);
+		}
+		uint32_t dll_key32, func_key32;
+		memcpy(&dll_key32, dll_key, 4);
+		memcpy(&func_key32, func_key, 4);
+
+		// Stub layout with inline string decryption:
+		//
+		// [0]   mov rax, [rip+127]           7   → cached_ptr at 134
+		// [7]   test rax, rax                3
+		// [10]  jnz +120                     2   → go at 132
+		// [12]  push rcx                     1
+		// [13]  push rdx                     1
+		// [14]  push r8                      2
+		// [16]  push r9                      2
+		// [18]  sub rsp, 0x28                4
+		//
+		// --- Decrypt dll_name (4-byte rolling XOR) ---
+		// [22]  lea r10, [rip+113]           7   → dll_name at 142
+		// [29]  mov ecx, dll_len             5
+		// [34]  mov r11d, dll_key32          6
+		// .dll_loop:
+		// [40]  xor byte [r10], r11b         3
+		// [43]  ror r11d, 8                  4
+		// [47]  inc r10                      3
+		// [50]  dec ecx                      2
+		// [52]  jnz .dll_loop                2   (disp = -14)
+		//
+		// --- Call LoadLibraryA ---
+		// [54]  lea rcx, [rip+81]            7   → dll_name at 142
+		// [61]  call [rip+X_LL]              6   → LoadLibraryA IAT
+		//
+		// --- Decrypt func_name (4-byte rolling XOR) ---
+		// [67]  lea r10, [rip+F]             7   → func_name at 142+dll_len+1
+		// [74]  mov ecx, func_len            5
+		// [79]  mov r11d, func_key32         6
+		// .func_loop:
+		// [85]  xor byte [r10], r11b         3
+		// [88]  ror r11d, 8                  4
+		// [92]  inc r10                      3
+		// [95]  dec ecx                      2
+		// [97]  jnz .func_loop              2   (disp = -14)
+		//
+		// --- Call GetProcAddress ---
+		// [99]  mov rcx, rax                 3
+		// [102] lea rdx, [rip+F2]            7   → func_name
+		// [109] call [rip+X_GP]              6   → GetProcAddress IAT
+		//
+		// --- Cache and return ---
+		// [115] mov [rip+12], rax            7   → cached_ptr at 134
+		// [122] add rsp, 0x28                4
+		// [126] pop r9                       2
+		// [128] pop r8                       2
+		// [130] pop rdx                      1
+		// [131] pop rcx                      1
+		// go:
+		// [132] jmp rax                      2
+		//
+		// --- data ---
+		// [134] cached_ptr: dq 0             8
+		// [142] dll_name: XOR'd              dll_len+1
+		// [142+dll_len+1] func_name: XOR'd   func_len+1
+
+		const uint32_t CODE_SIZE = 134;
+		const uint32_t DATA_OFFSET = CODE_SIZE;        // 134
+		const uint32_t DLL_OFFSET = DATA_OFFSET + 8;   // 142
+		const uint32_t FUNC_OFFSET = DLL_OFFSET + dll_name_len + 1;
+		uint32_t stub_size = FUNC_OFFSET + func_name_len + 1;
 
 		uint64_t stub_addr = (uint64_t)(base + new_section->VirtualAddress + total_size_used);
 
-		// External displacements to IAT slots
-		int32_t X3 = (int32_t)((int64_t)loadlib_iat_addr - (int64_t)(stub_addr + 35));
-		int32_t X4 = (int32_t)(78 + dll_name_len + 1) - 45;  // = 34 + dll_name_len
-		int32_t X5 = (int32_t)((int64_t)getproc_iat_addr - (int64_t)(stub_addr + 51));
+		// External IAT slot displacements (from end of CALL instruction)
+		int32_t X_LL = (int32_t)((int64_t)loadlib_iat_addr - (int64_t)(stub_addr + 67));
+		int32_t X_GP = (int32_t)((int64_t)getproc_iat_addr - (int64_t)(stub_addr + 115));
 
 		std::vector<uint8_t> stub(stub_size, 0);
 		int p = 0;
 
-		// [0] mov rax, [rip+63]  →  cached_ptr
+		// [0] mov rax, [rip+127]  →  cached_ptr at 134
 		stub[p++] = 0x48; stub[p++] = 0x8B; stub[p++] = 0x05;
-		*(int32_t*)&stub[p] = 63; p += 4;
+		*(int32_t*)&stub[p] = (int32_t)(DATA_OFFSET - 7); p += 4;  // 134 - 7 = 127
 
 		// [7] test rax, rax
 		stub[p++] = 0x48; stub[p++] = 0x85; stub[p++] = 0xC0;
 
-		// [10] jnz go  (go at 68, disp = 68 - 12 = 56 = 0x38)
-		stub[p++] = 0x75; stub[p++] = 0x38;
+		// [10] jnz go  (go at 132, disp = 132 - 12 = 120)
+		stub[p++] = 0x75; stub[p++] = (uint8_t)(132 - 12);
 
 		// [12] push rcx
 		stub[p++] = 0x51;
@@ -192,54 +240,112 @@ void obfuscator::write_iat_stubs(PIMAGE_SECTION_HEADER new_section) {
 		// [18] sub rsp, 0x28
 		stub[p++] = 0x48; stub[p++] = 0x83; stub[p++] = 0xEC; stub[p++] = 0x28;
 
-		// [22] lea rcx, [rip+49]  →  dll_name at offset 78
+		// --- Decrypt dll_name ---
+		// [22] lea r10, [rip+113]  →  dll_name at 142
+		stub[p++] = 0x4C; stub[p++] = 0x8D; stub[p++] = 0x15;
+		*(int32_t*)&stub[p] = (int32_t)(DLL_OFFSET - 29); p += 4;  // 142 - 29 = 113
+
+		// [29] mov ecx, dll_len
+		stub[p++] = 0xB9;
+		*(uint32_t*)&stub[p] = dll_name_len; p += 4;
+
+		// [34] mov r11d, dll_key32
+		stub[p++] = 0x41; stub[p++] = 0xBB;
+		*(uint32_t*)&stub[p] = dll_key32; p += 4;
+
+		// .dll_loop: (offset 40)
+		// [40] xor byte [r10], r11b
+		stub[p++] = 0x45; stub[p++] = 0x30; stub[p++] = 0x1A;
+		// [43] ror r11d, 8
+		stub[p++] = 0x41; stub[p++] = 0xC1; stub[p++] = 0xCB; stub[p++] = 0x08;
+		// [47] inc r10
+		stub[p++] = 0x49; stub[p++] = 0xFF; stub[p++] = 0xC2;
+		// [50] dec ecx
+		stub[p++] = 0xFF; stub[p++] = 0xC9;
+		// [52] jnz .dll_loop  (disp = 40 - 54 = -14)
+		stub[p++] = 0x75; stub[p++] = 0xF2;
+
+		// --- Call LoadLibraryA ---
+		// [54] lea rcx, [rip+81]  →  dll_name at 142
 		stub[p++] = 0x48; stub[p++] = 0x8D; stub[p++] = 0x0D;
-		*(int32_t*)&stub[p] = 49; p += 4;
+		*(int32_t*)&stub[p] = (int32_t)(DLL_OFFSET - 61); p += 4;  // 142 - 61 = 81
 
-		// [29] call [rip+X3]  →  LoadLibraryA
+		// [61] call [rip+X_LL]  →  LoadLibraryA
 		stub[p++] = 0xFF; stub[p++] = 0x15;
-		*(int32_t*)&stub[p] = X3; p += 4;
+		*(int32_t*)&stub[p] = X_LL; p += 4;
 
-		// [35] mov rcx, rax
+		// --- Decrypt func_name ---
+		// [67] lea r10, [rip+F]  →  func_name
+		stub[p++] = 0x4C; stub[p++] = 0x8D; stub[p++] = 0x15;
+		*(int32_t*)&stub[p] = (int32_t)(FUNC_OFFSET - 74); p += 4;  // (142+dll_len+1) - 74
+
+		// [74] mov ecx, func_len
+		stub[p++] = 0xB9;
+		*(uint32_t*)&stub[p] = func_name_len; p += 4;
+
+		// [79] mov r11d, func_key32
+		stub[p++] = 0x41; stub[p++] = 0xBB;
+		*(uint32_t*)&stub[p] = func_key32; p += 4;
+
+		// .func_loop: (offset 85)
+		// [85] xor byte [r10], r11b
+		stub[p++] = 0x45; stub[p++] = 0x30; stub[p++] = 0x1A;
+		// [88] ror r11d, 8
+		stub[p++] = 0x41; stub[p++] = 0xC1; stub[p++] = 0xCB; stub[p++] = 0x08;
+		// [92] inc r10
+		stub[p++] = 0x49; stub[p++] = 0xFF; stub[p++] = 0xC2;
+		// [95] dec ecx
+		stub[p++] = 0xFF; stub[p++] = 0xC9;
+		// [97] jnz .func_loop  (disp = 85 - 99 = -14)
+		stub[p++] = 0x75; stub[p++] = 0xF2;
+
+		// --- Call GetProcAddress ---
+		// [99] mov rcx, rax
 		stub[p++] = 0x48; stub[p++] = 0x89; stub[p++] = 0xC1;
 
-		// [38] lea rdx, [rip+X4]  →  func_name
+		// [102] lea rdx, [rip+F2]  →  func_name
 		stub[p++] = 0x48; stub[p++] = 0x8D; stub[p++] = 0x15;
-		*(int32_t*)&stub[p] = X4; p += 4;
+		*(int32_t*)&stub[p] = (int32_t)(FUNC_OFFSET - 109); p += 4;  // (142+dll_len+1) - 109
 
-		// [45] call [rip+X5]  →  GetProcAddress
+		// [109] call [rip+X_GP]  →  GetProcAddress
 		stub[p++] = 0xFF; stub[p++] = 0x15;
-		*(int32_t*)&stub[p] = X5; p += 4;
+		*(int32_t*)&stub[p] = X_GP; p += 4;
 
-		// [51] mov [rip+12], rax  →  cached_ptr
+		// --- Cache and return ---
+		// [115] mov [rip+12], rax  →  cached_ptr at 134
 		stub[p++] = 0x48; stub[p++] = 0x89; stub[p++] = 0x05;
-		*(int32_t*)&stub[p] = 12; p += 4;
+		*(int32_t*)&stub[p] = (int32_t)(DATA_OFFSET - 122); p += 4;  // 134 - 122 = 12
 
-		// [58] add rsp, 0x28
+		// [122] add rsp, 0x28
 		stub[p++] = 0x48; stub[p++] = 0x83; stub[p++] = 0xC4; stub[p++] = 0x28;
 
-		// [62] pop r9
+		// [126] pop r9
 		stub[p++] = 0x41; stub[p++] = 0x59;
-		// [64] pop r8
+		// [128] pop r8
 		stub[p++] = 0x41; stub[p++] = 0x58;
-		// [66] pop rdx
+		// [130] pop rdx
 		stub[p++] = 0x5A;
-		// [67] pop rcx
+		// [131] pop rcx
 		stub[p++] = 0x59;
 
-		// [68] jmp rax  (go label)
+		// [132] jmp rax  (go label)
 		stub[p++] = 0xFF; stub[p++] = 0xE0;
 
-		// p = 70 now
-		// [70] cached_ptr = 0 (already zeroed)
-		p = 70 + 8;
+		// p = 134 = CODE_SIZE
+		// [134] cached_ptr = 0 (already zeroed)
+		p = DLL_OFFSET;  // 142
 
-		// [78] dll_name string
-		memcpy(&stub[p], entry.dll_name.c_str(), dll_name_len + 1);
-		p += dll_name_len + 1;
+		// [142] dll_name — XOR encrypted with rolling 4-byte key
+		for (uint32_t j = 0; j < dll_name_len; j++) {
+			stub[p++] = (uint8_t)entry.dll_name[j] ^ dll_key[j % 4];
+		}
+		stub[p++] = 0;  // null terminator (not encrypted)
 
-		// func_name string
-		memcpy(&stub[p], entry.func_name.c_str(), func_name_len + 1);
+		// func_name — XOR encrypted with rolling 4-byte key
+		for (uint32_t j = 0; j < func_name_len; j++) {
+			stub[p++] = (uint8_t)entry.func_name[j] ^ func_key[j % 4];
+		}
+		stub[p++] = 0;  // null terminator
 
 		entry.stub_address = stub_addr;
 		memcpy((void*)stub_addr, stub.data(), stub.size());

@@ -34,12 +34,12 @@ int main(int args, char* argv[]) {
 		if (section_size < 10000000)
 			section_size = 10000000;
 
-		auto new_section = pe.create_section(".0Dev", section_size, IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_CNT_CODE);
+		auto new_section = pe.create_section(".vmp0", section_size, IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_CNT_CODE);
 
 		obfuscator obf(&pe);
 		obf.create_functions(functions);
 		obf.run(new_section, true);
-	
+
 		auto extension = std::filesystem::path(binary_path).extension();
 		pe.save_to_disk(std::filesystem::path(binary_path).replace_extension().string() + ".obf" + extension.string(), new_section, obf.get_added_size());
 			

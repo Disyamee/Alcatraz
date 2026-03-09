@@ -1,6 +1,7 @@
 #include "obfuscator.h"
 
 #include <iostream>
+#include <random>
 
 ZydisFormatter formatter;
 ZydisDecoder decoder;
@@ -90,30 +91,52 @@ void obfuscator::create_functions(std::vector<pdbparser::sym_func>functions) {
 
 void obfuscator::add_custom_entry(PIMAGE_SECTION_HEADER new_section) {
 
-
-
-	if (pe->get_path().find(".exe") != std::string::npos) {
-
-		auto jit_instructions = this->instructions_from_jit(std::bit_cast<uint8_t*>(&obfuscator::custom_main), std::bit_cast<uint64_t>(&obfuscator::custom_main_end) - std::bit_cast<uint64_t>(&obfuscator::custom_main));
-
-		for (auto inst = jit_instructions.begin(); inst != jit_instructions.end(); ++inst) {
-
-			void* address = (void*)(pe->get_buffer()->data() + new_section->VirtualAddress + this->total_size_used);
-			inst->relocated_address = (uint64_t)address;
-			memcpy(address, inst->raw_bytes.data(), inst->zyinstr.info.length);
-			this->total_size_used += inst->zyinstr.info.length;
-
-		}
-		pe->get_nt()->OptionalHeader.AddressOfEntryPoint = jit_instructions.at(0).relocated_address - (uint64_t)pe->get_buffer()->data();
-	}
-	else if (pe->get_path().find(".dll") != std::string::npos) {
+	if (pe->get_path().find(".exe") == std::string::npos)
 		throw std::runtime_error("File type doesn't support custom entry!\n");
+
+	auto nt = pe->get_nt();
+	const uint32_t original_entry_rva = nt->OptionalHeader.AddressOfEntryPoint;
+
+	// Strip security features that prevent execution from our new section:
+	//   CFG (Control Flow Guard) — validates indirect branch targets; our stub would fail.
+	//   Dynamic base is kept (ASLR works fine — we read actual base from PEB).
+	nt->OptionalHeader.DllCharacteristics &= ~(USHORT)0x4000;  // IMAGE_DLLCHARACTERISTICS_GUARD_CF
+
+	// Zero out the Load Config directory entry so the OS doesn't try to use
+	// stale GuardCF tables that reference the old code layout.
+	if (nt->OptionalHeader.NumberOfRvaAndSizes > IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG) {
+		nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG].VirtualAddress = 0;
+		nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG].Size = 0;
 	}
-	else if (pe->get_path().find(".sys") != std::string::npos) {
-		throw std::runtime_error("File type doesn't support custom entry!\n");
-	}
-	else
-		throw std::runtime_error("File type doesn't support custom entry!\n");
+
+	// Handcrafted x64 position-independent entry trampoline (21 bytes).
+	// No asmjit, no CRT, no external calls, no RIP-relative addressing.
+	//   mov rax, gs:[0x60]      ; TEB → PEB
+	//   mov rax, [rax+0x10]     ; PEB → ImageBase
+	//   add rax, <imm32>        ; + original entry RVA (sign-extended, always positive)
+	//   jmp rax                 ; transfer control to real entry
+	uint8_t stub[] = {
+		0x65, 0x48, 0x8B, 0x04, 0x25, 0x60, 0x00, 0x00, 0x00,  // mov rax, gs:[0x60]
+		0x48, 0x8B, 0x40, 0x10,                                  // mov rax, [rax+0x10]
+		0x48, 0x05, 0x00, 0x00, 0x00, 0x00,                      // add rax, imm32
+		0xFF, 0xE0                                                // jmp rax
+	};
+	memcpy(&stub[15], &original_entry_rva, 4);
+
+	printf("[ENTRY] Original EP RVA = 0x%08X\n", original_entry_rva);
+	printf("[ENTRY] Stub placed at   .vmp0 + 0x%X  (RVA 0x%X)\n",
+		this->total_size_used, new_section->VirtualAddress + this->total_size_used);
+	printf("[ENTRY] Stub bytes (%zu):", sizeof(stub));
+	for (size_t i = 0; i < sizeof(stub); i++) printf(" %02X", stub[i]);
+	printf("\n");
+
+	uint8_t* dest = pe->get_buffer()->data() + new_section->VirtualAddress + this->total_size_used;
+	memcpy(dest, stub, sizeof(stub));
+
+	nt->OptionalHeader.AddressOfEntryPoint = static_cast<uint32_t>(new_section->VirtualAddress + this->total_size_used);
+	this->total_size_used += sizeof(stub);
+
+	printf("[ENTRY] New EP RVA       = 0x%08X\n", nt->OptionalHeader.AddressOfEntryPoint);
 }
 
 bool obfuscator::find_inst_at_dst(uint64_t dst, instruction_t** instptr, function_t** funcptr) {
@@ -201,7 +224,7 @@ bool obfuscator::analyze_functions() {
 
 void obfuscator::relocate(PIMAGE_SECTION_HEADER new_section) {
 
-	auto base = pe->get_buffer()->data() + 0x1000;
+	auto base = pe->get_buffer()->data() + kReservedPrefixSize;
 
 	uint32_t used_memory = 0;
 
@@ -223,7 +246,7 @@ void obfuscator::relocate(PIMAGE_SECTION_HEADER new_section) {
 		used_memory += instr_ctr;
 	}
 
-	this->total_size_used = used_memory + 0x1000;
+	this->total_size_used = used_memory + kReservedPrefixSize;
 }
 
 bool obfuscator::find_instruction_by_id(int funcid, int instid, instruction_t* inst) {
@@ -563,9 +586,8 @@ void obfuscator::compile(PIMAGE_SECTION_HEADER new_section) {
 
 			*(int32_t*)&jmp_shell[1] = (signed int)(dst - src - sizeof(jmp_shell));
 
-			for (int i = 0; i < func->size - 5; i++) {
-				*(uint8_t*)((uint64_t)base + src + 5 + i) = rand() % 255 + 1;
-			}
+			// Zero-fill original function body after the jmp trampoline
+			memset((void*)((uint64_t)base + src + 5), 0, func->size - 5);
 
 			memcpy((void*)(base + src), jmp_shell, sizeof(jmp_shell));
 		}
@@ -601,7 +623,9 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 
 		for (auto instruction = func->instructions.begin(); instruction != func->instructions.end(); instruction++) {
 
-
+			// Skip JIT-inserted stubs (e.g. string decrypt) — they must not be modified by other passes
+			if (instruction->func_id < 0)
+				continue;
 
 			//Obfuscate IAT
 			if (func->iatobf && instruction->isjmpcall && instruction->relative.target_inst_id == -1)
@@ -679,6 +703,24 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 
 	if (obfuscate_entry_point)
 		this->add_custom_entry(new_section);
+
+	// Fill unused .vmp0 space with random data for high entropy
+	{
+		auto base = pe->get_buffer()->data() + new_section->VirtualAddress;
+		uint32_t section_capacity = new_section->Misc.VirtualSize;
+		if (this->total_size_used < section_capacity) {
+			std::mt19937 rng(std::random_device{}());
+			uint8_t* fill_start = base + this->total_size_used;
+			uint32_t fill_size = section_capacity - this->total_size_used;
+			for (uint32_t i = 0; i < fill_size; i++)
+				fill_start[i] = (uint8_t)(rng() % 256);
+		}
+	}
+
+	// Anti-analysis: strip debug info, Rich header, and randomize timestamp
+	pe->strip_debug_directory();
+	pe->erase_rich_header();
+	pe->randomize_timestamp();
 }
 
 uint32_t obfuscator::get_added_size() {

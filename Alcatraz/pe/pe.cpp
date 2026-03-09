@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <random>
 
 
 pe64::pe64(std::string binary_path) {
@@ -127,6 +128,62 @@ void pe64::save_to_disk(std::string path, PIMAGE_SECTION_HEADER new_section, uin
 	new_section->Misc.VirtualSize = size;
 	this->get_nt()->OptionalHeader.SizeOfImage -= (original_size - size);
 
+	// Add fake .vmp1 section after .vmp0 (mimics VMProtect's encrypted data section)
+	{
+		auto nt = this->get_nt();
+		auto opt = &nt->OptionalHeader;
+		uint32_t sect_align = opt->SectionAlignment;
+
+		// Save .vmp0 layout values and header offset before any reallocation
+		uint32_t vmp0_va = new_section->VirtualAddress;
+		uint32_t vmp0_vsize = new_section->Misc.VirtualSize;
+		uint32_t vmp1_hdr_offset = (uint32_t)((uint8_t*)(&new_section->Characteristics) + 4 - this->buffer.data());
+
+		const uint32_t vmp1_data_size = 0x1000;
+
+		// Use page-aligned VA; since buffer is VA-mapped, PointerToRawData = VirtualAddress
+		uint32_t vmp1_va_unaligned = vmp0_va + vmp0_vsize;
+		uint32_t vmp1_va = vmp1_va_unaligned;
+		if (vmp1_va % sect_align != 0)
+			vmp1_va += sect_align - (vmp1_va % sect_align);
+
+		uint32_t vmp1_vsize = vmp1_data_size;
+		if (vmp1_vsize % sect_align != 0)
+			vmp1_vsize += sect_align - (vmp1_vsize % sect_align);
+
+		uint32_t new_image_size = vmp1_va + vmp1_vsize;
+
+		// Extend buffer if needed (likely already big enough from pre-shrink allocation)
+		if (this->buffer.size() < new_image_size)
+			this->buffer.resize(new_image_size, 0);
+
+		// Re-obtain NT headers after potential reallocation
+		nt = this->get_nt();
+		nt->FileHeader.NumberOfSections += 1;
+		nt->OptionalHeader.SizeOfImage = new_image_size;
+		nt->OptionalHeader.SizeOfHeaders = this->align(
+			nt->OptionalHeader.SizeOfHeaders + sizeof(IMAGE_SECTION_HEADER),
+			nt->OptionalHeader.FileAlignment);
+
+		// Write .vmp1 section header
+		PIMAGE_SECTION_HEADER vmp1 = (PIMAGE_SECTION_HEADER)(this->buffer.data() + vmp1_hdr_offset);
+		memset(vmp1, 0, sizeof(IMAGE_SECTION_HEADER));
+		memcpy(vmp1->Name, ".vmp1\0\0\0", 8);
+		vmp1->Misc.VirtualSize = vmp1_vsize;
+		vmp1->VirtualAddress = vmp1_va;
+		// Buffer is VA-mapped, so file offset == virtual address
+		vmp1->SizeOfRawData = vmp1_vsize;
+		vmp1->PointerToRawData = vmp1_va;
+		vmp1->Characteristics = IMAGE_SCN_MEM_READ | IMAGE_SCN_CNT_INITIALIZED_DATA;
+
+		// Fill .vmp1 with random data
+		std::random_device rd;
+		std::mt19937 rng(rd());
+		uint8_t* vmp1_data = this->buffer.data() + vmp1_va;
+		for (uint32_t j = 0; j < vmp1_data_size; j++)
+			vmp1_data[j] = (uint8_t)(rng() % 256);
+	}
+
 	std::ofstream file_stream(path.c_str(), std::ios_base::out | std::ios_base::binary);
 	if (!file_stream)
 		throw std::runtime_error("couldn't open output binary!");
@@ -137,6 +194,37 @@ void pe64::save_to_disk(std::string path, PIMAGE_SECTION_HEADER new_section, uin
 	}
 
 	file_stream.close();
+}
+
+void pe64::strip_debug_directory() {
+	auto nt = this->get_nt();
+	if (nt->OptionalHeader.NumberOfRvaAndSizes > IMAGE_DIRECTORY_ENTRY_DEBUG) {
+		nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].VirtualAddress = 0;
+		nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DEBUG].Size = 0;
+	}
+}
+
+void pe64::erase_rich_header() {
+	auto dos = reinterpret_cast<PIMAGE_DOS_HEADER>(this->buffer.data());
+	uint32_t pe_offset = dos->e_lfanew;
+
+	// Scan for "Rich" signature (0x52696368) between end of DOS stub and PE header
+	for (uint32_t i = 0x80; i + 8 <= pe_offset; i += 4) {
+		if (*(uint32_t*)(&this->buffer[i]) == 0x68636952) {  // "Rich" in little-endian
+			// Zero everything from after the DOS stub (0x80) through Rich + key (i + 8)
+			memset(&this->buffer[0x80], 0, (i + 8) - 0x80);
+			break;
+		}
+	}
+}
+
+void pe64::randomize_timestamp() {
+	auto nt = this->get_nt();
+	std::random_device rd;
+	std::mt19937 rng(rd());
+	std::uniform_int_distribution<uint32_t> dist(0x50000000, 0x67000000);  // plausible range (2012-2025)
+	nt->FileHeader.TimeDateStamp = dist(rng);
+	nt->OptionalHeader.CheckSum = 0;
 }
 
 std::string pe64::get_path() {
