@@ -139,8 +139,14 @@
     <ClCompile Include="..\Alcatraz\obfuscator\misc\cfflattener.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\misc\custom_entry.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\misc\iat.cpp" />
+    <ClCompile Include="..\Alcatraz\obfuscator\misc\callhide.cpp" />
+    <ClCompile Include="..\Alcatraz\obfuscator\misc\bcf.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\obfuscator.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\passes\add.cpp" />
+    <ClCompile Include="..\Alcatraz\obfuscator\passes\sub.cpp" />
+    <ClCompile Include="..\Alcatraz\obfuscator\passes\xor.cpp" />
+    <ClCompile Include="..\Alcatraz\obfuscator\passes\and.cpp" />
+    <ClCompile Include="..\Alcatraz\obfuscator\passes\or.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\passes\antidisassembly.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\passes\lea.cpp" />
     <ClCompile Include="..\Alcatraz\obfuscator\passes\mov.cpp" />

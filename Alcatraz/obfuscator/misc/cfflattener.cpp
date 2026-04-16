@@ -36,6 +36,8 @@ bool is_jmp_conditional(ZydisDecodedInstruction instr) {
 
 
 bool obfuscator::flatten_control_flow(std::vector<obfuscator::function_t>::iterator& func) {
+	if (func->instructions.empty())
+		return false;
 
 	struct block_t {
 		int block_id;

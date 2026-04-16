@@ -142,8 +142,14 @@
     <ClCompile Include="obfuscator\misc\cfflattener.cpp" />
     <ClCompile Include="obfuscator\misc\custom_entry.cpp" />
     <ClCompile Include="obfuscator\misc\iat.cpp" />
+    <ClCompile Include="obfuscator\misc\callhide.cpp" />
+    <ClCompile Include="obfuscator\misc\bcf.cpp" />
     <ClCompile Include="obfuscator\obfuscator.cpp" />
     <ClCompile Include="obfuscator\passes\add.cpp" />
+    <ClCompile Include="obfuscator\passes\sub.cpp" />
+    <ClCompile Include="obfuscator\passes\xor.cpp" />
+    <ClCompile Include="obfuscator\passes\and.cpp" />
+    <ClCompile Include="obfuscator\passes\or.cpp" />
     <ClCompile Include="obfuscator\passes\antidisassembly.cpp" />
     <ClCompile Include="obfuscator\passes\lea.cpp" />
     <ClCompile Include="obfuscator\passes\mov.cpp" />

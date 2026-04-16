@@ -1,7 +1,6 @@
 #pragma once
 #include "../pe/pe.h"
 #include "Zydis/Zydis.h"
-#include "../pdbparser/pdbparser.h"
 
 #include <bit>
 #include <map>
@@ -35,6 +34,16 @@ private:
 	std::vector<function_t>functions;
 
 	uint32_t total_size_used;
+
+	// Call hiding
+	struct call_hide_patch_t {
+		int func_id;
+		int inst_id;
+		uint64_t target_runtime_addr;
+	};
+	std::vector<call_hide_patch_t> call_hide_patches;
+	bool hide_call(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
+	void write_call_hide_stubs(PIMAGE_SECTION_HEADER new_section);
 
 	// IAT obfuscation
 	struct iat_entry_t {
@@ -91,6 +100,7 @@ private:
 	*/
 
 	bool flatten_control_flow(std::vector<obfuscator::function_t>::iterator& func_iter);
+	bool insert_bogus_control_flow(std::vector<obfuscator::function_t>::iterator& func_iter);
 	bool obfuscate_iat_call(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
 
 	__declspec(safebuffers)  int custom_dll_main(HINSTANCE instance, DWORD fdwreason, LPVOID reserved); void custom_dll_main_end();
@@ -105,11 +115,32 @@ private:
 	bool add_junk(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
 	bool obfuscate_mov(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
 	bool obfuscate_add(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
+	bool obfuscate_sub(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
+	bool obfuscate_xor(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
+	bool obfuscate_and(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
+	bool obfuscate_or(std::vector<obfuscator::function_t>::iterator& func_iter, std::vector<obfuscator::instruction_t>::iterator& instruction_iter);
 public:
+	struct input_function_t {
+		int id = 0;
+		uint32_t offset = 0;
+		std::string name;
+		uint32_t size = 0;
+		bool obfuscate = true;
+
+		bool ctfflattening = true;
+		bool movobf = true;
+		bool mutateobf = true;
+		bool leaobf = true;
+		bool antidisassembly = true;
+		bool iatobf = true;
+		bool stringenc = true;
+		bool callhideobf = false;
+		bool bcfobf = false;
+	};
 
 	obfuscator(pe64* pe);
 
-	void create_functions(std::vector<pdbparser::sym_func>functions);
+	void create_functions(std::vector<input_function_t> functions);
 
 	void run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_point);
 
@@ -120,6 +151,7 @@ public:
 		int inst_id;
 		int func_id;
 		bool is_first_instruction;
+		bool is_synthetic = false;
 		std::vector<uint8_t>raw_bytes;
 		uint64_t runtime_address;
 		uint64_t relocated_address;
@@ -161,6 +193,8 @@ public:
 		bool antidisassembly = true;
 		bool iatobf = true;
 		bool stringenc = true;
+		bool callhideobf = false;
+		bool bcfobf = false;
 		bool has_jumptables = false;
 	};
 };

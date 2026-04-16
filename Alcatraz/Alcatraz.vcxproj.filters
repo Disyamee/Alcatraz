@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -60,7 +60,25 @@
     <ClCompile Include="obfuscator\passes\add.cpp">
       <Filter>Header Files\obfuscator\passes</Filter>
     </ClCompile>
+    <ClCompile Include="obfuscator\passes\sub.cpp">
+      <Filter>Header Files\obfuscator\passes</Filter>
+    </ClCompile>
+    <ClCompile Include="obfuscator\passes\xor.cpp">
+      <Filter>Header Files\obfuscator\passes</Filter>
+    </ClCompile>
+    <ClCompile Include="obfuscator\passes\and.cpp">
+      <Filter>Header Files\obfuscator\passes</Filter>
+    </ClCompile>
+    <ClCompile Include="obfuscator\passes\or.cpp">
+      <Filter>Header Files\obfuscator\passes</Filter>
+    </ClCompile>
     <ClCompile Include="obfuscator\misc\custom_entry.cpp">
+      <Filter>Header Files\obfuscator\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="obfuscator\misc\callhide.cpp">
+      <Filter>Header Files\obfuscator\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="obfuscator\misc\bcf.cpp">
       <Filter>Header Files\obfuscator\misc</Filter>
     </ClCompile>
   </ItemGroup>

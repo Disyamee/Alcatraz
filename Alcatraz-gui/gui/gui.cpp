@@ -28,6 +28,8 @@ bool global_mutateobf = true;
 bool global_leaobf = true;
 bool global_antidisasm = true;
 bool global_iatobf = true;
+bool global_callhide = false;
+bool global_bcf = false;
 bool global_stringenc = true;
 
 void gui::render_interface() {
@@ -136,6 +138,10 @@ void gui::render_interface() {
 						for (auto& f : funcs_to_obfuscate) f.ctfflattening = global_cff;
 						for (auto& f : funcs) f.ctfflattening = global_cff;
 					}
+					if (ImGui::Checkbox("Bogus control flow", &global_bcf)) {
+						for (auto& f : funcs_to_obfuscate) f.bcfobf = global_bcf;
+						for (auto& f : funcs) f.bcfobf = global_bcf;
+					}
 					if (ImGui::Checkbox("Immediate MOV obfuscation", &global_movobf)) {
 						for (auto& f : funcs_to_obfuscate) f.movobf = global_movobf;
 						for (auto& f : funcs) f.movobf = global_movobf;
@@ -155,6 +161,10 @@ void gui::render_interface() {
 					if (ImGui::Checkbox("IAT obfuscation", &global_iatobf)) {
 						for (auto& f : funcs_to_obfuscate) f.iatobf = global_iatobf;
 						for (auto& f : funcs) f.iatobf = global_iatobf;
+					}
+					if (ImGui::Checkbox("Call hiding", &global_callhide)) {
+						for (auto& f : funcs_to_obfuscate) f.callhideobf = global_callhide;
+						for (auto& f : funcs) f.callhideobf = global_callhide;
 					}
 					if (ImGui::Checkbox("String encryption", &global_stringenc)) {
 						for (auto& f : funcs_to_obfuscate) f.stringenc = global_stringenc;
@@ -253,6 +263,8 @@ void gui::render_interface() {
 				ImGui::Checkbox("LEA obfuscation", &func->leaobf);
 				ImGui::Checkbox("Anti disassembly", &func->antidisassembly);
 				ImGui::Checkbox("IAT obfuscation", &func->iatobf);
+				ImGui::Checkbox("Call hiding", &func->callhideobf);
+				ImGui::Checkbox("Bogus control flow", &func->bcfobf);
 				ImGui::Checkbox("String encryption", &func->stringenc);
 			}
 			else {
@@ -269,6 +281,8 @@ void gui::render_interface() {
 					ImGui::Checkbox("LEA obfuscation", &func->leaobf);
 					ImGui::Checkbox("Anti disassembly", &func->antidisassembly);
 					ImGui::Checkbox("IAT obfuscation", &func->iatobf);
+					ImGui::Checkbox("Call hiding", &func->callhideobf);
+					ImGui::Checkbox("Bogus control flow", &func->bcfobf);
 					ImGui::Checkbox("String encryption", &func->stringenc);
 
 					if (ImGui::Button("Add to list")) {

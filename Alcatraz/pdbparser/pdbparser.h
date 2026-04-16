@@ -34,6 +34,8 @@ public:
 		bool antidisassembly = true;
 		bool iatobf = true;
 		bool stringenc = true;
+		bool callhideobf = false;
+		bool bcfobf = false;
 
 	};
 

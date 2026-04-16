@@ -27,12 +27,14 @@ obfuscator::obfuscator(pe64* pe) {
 
 }
 
-void obfuscator::create_functions(std::vector<pdbparser::sym_func>functions) {
+void obfuscator::create_functions(std::vector<input_function_t> functions) {
 
 	auto text_section = this->pe->get_section(".text");
 
 	if (!text_section)
 		throw std::runtime_error("couldn't find .text section");
+
+	const uint32_t text_size = (std::max)(text_section->Misc.VirtualSize, text_section->SizeOfRawData);
 
 	std::vector<uint32_t>visited_rvas;
 
@@ -44,10 +46,15 @@ void obfuscator::create_functions(std::vector<pdbparser::sym_func>functions) {
 			continue;
 		if (function.size < 5)
 			continue;
+		if (function.offset >= text_size)
+			continue;
+
+		visited_rvas.push_back(function.offset);
 
 		ZydisDisassembledInstruction zyinstruction{};
 
 		auto address_to_analyze = this->pe->get_buffer()->data() + text_section->VirtualAddress + function.offset;
+		const uint32_t max_function_size = (std::min)(function.size, text_size - function.offset);
 		uint32_t offset = 0;
 
 		function_t new_function(function_iterator++, function.name, function.offset, function.size);
@@ -59,14 +66,19 @@ void obfuscator::create_functions(std::vector<pdbparser::sym_func>functions) {
 		new_function.antidisassembly = function.antidisassembly;
 		new_function.iatobf = function.iatobf;
 		new_function.stringenc = function.stringenc;
+		new_function.callhideobf = function.callhideobf;
+		new_function.bcfobf = function.bcfobf;
 
 		std::vector <uint64_t> runtime_addresses;
 
-		while (ZYAN_SUCCESS(ZydisDisassembleIntel(ZYDIS_MACHINE_MODE_LONG_64, (ZyanU64)(address_to_analyze + offset), (const void*)(address_to_analyze + offset), function.size - offset, &zyinstruction))) {
+		while (offset < max_function_size &&
+			ZYAN_SUCCESS(ZydisDisassembleIntel(ZYDIS_MACHINE_MODE_LONG_64, (ZyanU64)(address_to_analyze + offset), (const void*)(address_to_analyze + offset), max_function_size - offset, &zyinstruction))) {
 
 			instruction_t new_instruction{};
 			new_instruction.runtime_address = (uint64_t)address_to_analyze + offset;
 			new_instruction.load(new_function.func_id, zyinstruction, new_instruction.runtime_address);
+			if (new_instruction.zyinstr.info.length == 0)
+				break;
 			if (offset == 0)
 				new_instruction.is_first_instruction = true;
 			new_function.instructions.push_back(new_instruction);
@@ -79,7 +91,9 @@ void obfuscator::create_functions(std::vector<pdbparser::sym_func>functions) {
 			new_function.inst_id_index[new_instruction.inst_id] = inst_index;
 		}
 
-		visited_rvas.push_back(function.offset);
+		if (new_function.instructions.empty())
+			continue;
+
 		this->functions.push_back(new_function);
 
 		for (auto runtime_address = runtime_addresses.begin(); runtime_address != runtime_addresses.end(); ++runtime_address) {
@@ -617,19 +631,23 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 		if (func->has_jumptables)
 			continue;
 
-		//Obfuscate control flow
+		if (func->bcfobf)
+			this->insert_bogus_control_flow(func);
 		if (func->ctfflattening)
 			this->flatten_control_flow(func);
 
 		for (auto instruction = func->instructions.begin(); instruction != func->instructions.end(); instruction++) {
 
-			// Skip JIT-inserted stubs (e.g. string decrypt) — they must not be modified by other passes
-			if (instruction->func_id < 0)
+			if (instruction->func_id < 0 || instruction->is_synthetic)
 				continue;
 
 			//Obfuscate IAT
 			if (func->iatobf && instruction->isjmpcall && instruction->relative.target_inst_id == -1)
 				this->obfuscate_iat_call(func, instruction);
+
+			// Hide internal calls
+			if (func->callhideobf && instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_CALL)
+				this->hide_call(func, instruction);
 
 
 			//Obfuscate 0xFF instructions to throw off disassemblers
@@ -639,10 +657,18 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 			}
 
 
-			//Obfuscate ADD
+			//Obfuscate ADD/SUB
 			if (func->mutateobf) {
 				if (instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_ADD)
 					this->obfuscate_add(func, instruction);
+				if (instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_SUB)
+					this->obfuscate_sub(func, instruction);
+				if (instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_XOR)
+					this->obfuscate_xor(func, instruction);
+				if (instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_AND)
+					this->obfuscate_and(func, instruction);
+				if (instruction->zyinstr.info.mnemonic == ZYDIS_MNEMONIC_OR)
+					this->obfuscate_or(func, instruction);
 			}
 
 
@@ -700,6 +726,9 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 		this->write_iat_stubs(new_section);
 		this->patch_iat_calls();
 	}
+
+	if (!call_hide_patches.empty())
+		this->write_call_hide_stubs(new_section);
 
 	if (obfuscate_entry_point)
 		this->add_custom_entry(new_section);
