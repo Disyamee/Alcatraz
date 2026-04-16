@@ -6,43 +6,80 @@
 void obfuscator::build_iat_map() {
 	auto nt = pe->get_nt();
 	auto base = pe->get_buffer()->data();
+	const size_t buffer_size = pe->get_buffer()->size();
 	auto& import_dir = nt->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
 
-	if (import_dir.VirtualAddress == 0 || import_dir.Size == 0)
-		return;
-
-	auto import_desc = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(base + import_dir.VirtualAddress);
-
+	iat_map.clear();
+	iat_patches.clear();
 	loadlib_iat_addr = 0;
 	getproc_iat_addr = 0;
 
-	while (import_desc->Name != 0) {
-		const char* dll_name = reinterpret_cast<const char*>(base + import_desc->Name);
+	if (import_dir.VirtualAddress == 0 || import_dir.Size == 0)
+		return;
+	if ((uint64_t)import_dir.VirtualAddress + import_dir.Size > buffer_size)
+		return;
 
-		auto oft = reinterpret_cast<PIMAGE_THUNK_DATA>(base + import_desc->OriginalFirstThunk);
-		auto ft = reinterpret_cast<PIMAGE_THUNK_DATA>(base + import_desc->FirstThunk);
+	const auto import_end = import_dir.VirtualAddress + import_dir.Size;
+	auto import_desc = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(base + import_dir.VirtualAddress);
 
-		while (oft->u1.AddressOfData != 0) {
-			if (!(oft->u1.Ordinal & IMAGE_ORDINAL_FLAG64)) {
-				auto hint_name = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(base + oft->u1.AddressOfData);
-				const char* func_name = hint_name->Name;
-
-				iat_entry_t entry{};
-				entry.buffer_address = (uint64_t)&ft->u1.Function;
-				entry.dll_name = dll_name;
-				entry.func_name = func_name;
-				entry.stub_address = 0;
-
-				if (std::string(func_name) == "LoadLibraryA" && loadlib_iat_addr == 0)
-					loadlib_iat_addr = entry.buffer_address;
-				if (std::string(func_name) == "GetProcAddress" && getproc_iat_addr == 0)
-					getproc_iat_addr = entry.buffer_address;
-
-				iat_map.push_back(entry);
-			}
-			oft++;
-			ft++;
+	while (true) {
+		const uint64_t desc_rva = (uint64_t)((uint8_t*)import_desc - base);
+		if (desc_rva + sizeof(IMAGE_IMPORT_DESCRIPTOR) > import_end)
+			break;
+		if (import_desc->Name == 0)
+			break;
+		if (import_desc->Name >= buffer_size) {
+			import_desc++;
+			continue;
 		}
+
+		const char* dll_name = reinterpret_cast<const char*>(base + import_desc->Name);
+		uint32_t lookup_thunk_rva = import_desc->OriginalFirstThunk != 0 ? import_desc->OriginalFirstThunk : import_desc->FirstThunk;
+		uint32_t iat_thunk_rva = import_desc->FirstThunk;
+
+		if (lookup_thunk_rva == 0 || iat_thunk_rva == 0 ||
+			lookup_thunk_rva >= buffer_size || iat_thunk_rva >= buffer_size) {
+			import_desc++;
+			continue;
+		}
+
+		uint32_t thunk_index = 0;
+		while (true) {
+			uint64_t lookup_rva = (uint64_t)lookup_thunk_rva + (uint64_t)thunk_index * sizeof(IMAGE_THUNK_DATA64);
+			uint64_t iat_rva = (uint64_t)iat_thunk_rva + (uint64_t)thunk_index * sizeof(IMAGE_THUNK_DATA64);
+			if (lookup_rva + sizeof(IMAGE_THUNK_DATA64) > buffer_size || iat_rva + sizeof(IMAGE_THUNK_DATA64) > buffer_size)
+				break;
+
+			auto lookup_thunk = reinterpret_cast<PIMAGE_THUNK_DATA64>(base + lookup_rva);
+			auto iat_thunk = reinterpret_cast<PIMAGE_THUNK_DATA64>(base + iat_rva);
+
+			if (lookup_thunk->u1.AddressOfData == 0)
+				break;
+
+			if (!(lookup_thunk->u1.Ordinal & IMAGE_ORDINAL_FLAG64)) {
+				const uint64_t ibn_rva = lookup_thunk->u1.AddressOfData;
+				if (ibn_rva + sizeof(IMAGE_IMPORT_BY_NAME) <= buffer_size) {
+					auto hint_name = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(base + ibn_rva);
+					const char* func_name = reinterpret_cast<const char*>(hint_name->Name);
+
+					iat_entry_t entry{};
+					entry.buffer_address = (uint64_t)&iat_thunk->u1.Function;
+					entry.dll_name = dll_name;
+					entry.func_name = func_name;
+					entry.stub_address = 0;
+
+					if (entry.func_name == "LoadLibraryA" && loadlib_iat_addr == 0)
+						loadlib_iat_addr = entry.buffer_address;
+					if (entry.func_name == "GetProcAddress" && getproc_iat_addr == 0)
+						getproc_iat_addr = entry.buffer_address;
+
+					iat_map.push_back(entry);
+				}
+			}
+
+			thunk_index++;
+		}
+
 		import_desc++;
 	}
 }
