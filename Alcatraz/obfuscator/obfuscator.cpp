@@ -144,6 +144,23 @@ void obfuscator::add_custom_entry(PIMAGE_SECTION_HEADER new_section) {
 	for (size_t i = 0; i < sizeof(stub); i++) printf(" %02X", stub[i]);
 	printf("\n");
 
+	// Random padding before stub so EP RVA differs each run
+	{
+		std::mt19937 pad_rng(std::random_device{}());
+		const uint32_t section_capacity = new_section->Misc.VirtualSize;
+		const uint32_t available = (section_capacity > this->total_size_used + static_cast<uint32_t>(sizeof(stub)) + 4)
+			? section_capacity - this->total_size_used - static_cast<uint32_t>(sizeof(stub)) - 4
+			: 0;
+		if (available > 0) {
+			uint32_t pad = std::uniform_int_distribution<uint32_t>(0x80, 0x27F)(pad_rng);
+			pad = (std::min)(pad, available);
+			uint8_t* pad_dest = pe->get_buffer()->data() + new_section->VirtualAddress + this->total_size_used;
+			for (uint32_t i = 0; i < pad; i++)
+				pad_dest[i] = static_cast<uint8_t>(pad_rng());
+			this->total_size_used += pad;
+		}
+	}
+
 	uint8_t* dest = pe->get_buffer()->data() + new_section->VirtualAddress + this->total_size_used;
 	memcpy(dest, stub, sizeof(stub));
 
@@ -609,7 +626,8 @@ void obfuscator::compile(PIMAGE_SECTION_HEADER new_section) {
 
 }
 
-void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_point) {
+void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_point,
+	std::function<void(int current, int total)> progress_cb) {
 
 	if (!this->analyze_functions())
 		throw std::runtime_error("couldn't analyze functions");
@@ -626,6 +644,8 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 
 	//Actual obfuscation passes
 
+	const int obf_total = static_cast<int>(functions.size());
+	int obf_done = 0;
 	for (auto func = functions.begin(); func != functions.end(); func++) {
 
 		if (func->has_jumptables)
@@ -709,6 +729,9 @@ void obfuscator::run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_poi
 
 
 		}
+
+		if (progress_cb)
+			progress_cb(++obf_done, obf_total);
 
 	}
 

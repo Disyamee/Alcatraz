@@ -10,8 +10,10 @@
 #include <filesystem>
 #include <algorithm>
 #include <fstream>
+#include <thread>
 
 std::string path = "";
+static std::thread g_obf_thread;
 
 int panel = 0;
 int selected_func = 0;
@@ -44,7 +46,7 @@ void gui::render_interface() {
 
 		if (ImGui::BeginMenu("File")) {
 
-			if (ImGui::MenuItem("Open")) {
+			if (ImGui::MenuItem("Open", nullptr, false, !inter::g_obf_running)) {
 
 				char filename[MAX_PATH];
 
@@ -227,16 +229,44 @@ void gui::render_interface() {
 					}
 				}
 
-				if (ImGui::Button("Compile")) {
-					try {
-						inter::run_obfuscator(funcs_to_obfuscate, obf_entry_point);
-						MessageBoxA(0, "Compiled", "Success", 0);
+				// Compile button — disabled while obfuscation is running
+				if (!inter::g_obf_running) {
+					if (ImGui::Button("Compile")) {
+						if (g_obf_thread.joinable())
+							g_obf_thread.join();
+						auto funcs_copy = funcs_to_obfuscate;
+						bool ep_copy = obf_entry_point;
+						g_obf_thread = std::thread([funcs_copy, ep_copy]() {
+							inter::run_obfuscator(funcs_copy, ep_copy);
+						});
 					}
-					catch (std::runtime_error e)
-					{
-						MessageBoxA(0, e.what(), "Exception", 0);
+				} else {
+					ImGui::BeginDisabled(true);
+					ImGui::Button("Compile");
+					ImGui::EndDisabled();
+				}
+
+				// Progress bar and function counter while running
+				if (inter::g_obf_running || (inter::g_obf_done && inter::g_obf_progress > 0)) {
+					int cur = inter::g_obf_progress.load();
+					int tot = inter::g_obf_total.load();
+					float frac = (tot > 0) ? static_cast<float>(cur) / static_cast<float>(tot) : 0.f;
+					ImGui::ProgressBar(frac, ImVec2(-1.f, 0.f));
+					ImGui::Text("%d / %d functions", cur, tot);
+				}
+
+				// Handle completion on the main thread
+				if (inter::g_obf_done) {
+					inter::g_obf_done.store(false);
+					if (g_obf_thread.joinable())
+						g_obf_thread.join();
+					std::string err;
+					{ std::lock_guard<std::mutex> lk(inter::g_obf_mutex); err = inter::g_obf_error; }
+					if (err.empty()) {
+						MessageBoxA(0, "Compiled", "Success", 0);
+					} else {
+						MessageBoxA(0, err.c_str(), "Exception", 0);
 						path = "";
-						//std::cout << "Runtime error: " << e.what() << std::endl;
 					}
 				}
 			}

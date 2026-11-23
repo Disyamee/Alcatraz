@@ -8,6 +8,13 @@
 #include <unordered_set>
 #include <sstream>
 
+std::atomic<int>  inter::g_obf_progress{0};
+std::atomic<int>  inter::g_obf_total{0};
+std::atomic<bool> inter::g_obf_running{false};
+std::atomic<bool> inter::g_obf_done{false};
+std::string       inter::g_obf_error;
+std::mutex        inter::g_obf_mutex;
+
 static bool has_sidecar_pdb(const std::string& binary_path) {
 	std::filesystem::path pdb_path = binary_path;
 	pdb_path.replace_extension(".pdb");
@@ -108,48 +115,75 @@ std::vector<pdbparser::sym_func> inter::load_context(std::string path) {
 
 void inter::run_obfuscator(std::vector<pdbparser::sym_func> funcs, bool obfuscate_entry_point) {
 
-	pe64 pe(binary_path);
-	auto extension = std::filesystem::path(binary_path).extension();
+	// Reset progress state
+	g_obf_progress.store(0);
+	g_obf_total.store(0);
+	g_obf_running.store(true);
+	g_obf_done.store(false);
+	{ std::lock_guard<std::mutex> lk(g_obf_mutex); g_obf_error.clear(); }
 
-	std::remove((std::filesystem::path(binary_path).replace_extension().string() + ".obf" + extension.string()).c_str());
+	try {
+		pe64 pe(binary_path);
+		auto extension = std::filesystem::path(binary_path).extension();
 
-	uint32_t total_func_size = 0;
-	for (auto& f : funcs) {
-		if (f.obfuscate && f.size >= 5)
-			total_func_size += f.size;
+		std::remove((std::filesystem::path(binary_path).replace_extension().string() + ".obf" + extension.string()).c_str());
+
+		uint32_t total_func_size = 0;
+		int active_count = 0;
+		for (auto& f : funcs) {
+			if (f.obfuscate && f.size >= 5) {
+				total_func_size += f.size;
+				++active_count;
+			}
+		}
+		// Set total before the run so the progress bar shows the right denominator immediately
+		g_obf_total.store(active_count);
+
+		// Obfuscation passes expand code ~10x (CFF, MOV, ADD, anti-disasm). Add 1MB minimum.
+		uint32_t section_size = (total_func_size * 12) + 0x100000;
+		if (section_size < 10000000)
+			section_size = 10000000;
+
+		auto new_section = pe.create_section(".vmp0", section_size, IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_CNT_CODE);
+
+		std::vector<obfuscator::input_function_t> input_functions;
+		input_functions.reserve(funcs.size());
+		for (const auto& f : funcs) {
+			obfuscator::input_function_t in{};
+			in.id = f.id;
+			in.offset = f.offset;
+			in.name = f.name;
+			in.size = f.size;
+			in.obfuscate = f.obfuscate;
+			in.ctfflattening = f.ctfflattening;
+			in.movobf = f.movobf;
+			in.mutateobf = f.mutateobf;
+			in.leaobf = f.leaobf;
+			in.antidisassembly = f.antidisassembly;
+			in.iatobf = f.iatobf;
+			in.stringenc = f.stringenc;
+			in.callhideobf = f.callhideobf;
+			in.bcfobf = f.bcfobf;
+			input_functions.push_back(in);
+		}
+
+		obfuscator obf(&pe);
+		obf.create_functions(input_functions);
+		obf.run(new_section, obfuscate_entry_point, [](int cur, int /*tot*/) {
+			g_obf_progress.store(cur);
+		});
+
+		pe.save_to_disk(std::filesystem::path(binary_path).replace_extension().string() + ".obf" + extension.string(), new_section, obf.get_added_size());
 	}
-	// Obfuscation passes expand code ~10x (CFF, MOV, ADD, anti-disasm). Add 1MB minimum.
-	uint32_t section_size = (total_func_size * 12) + 0x100000;
-	if (section_size < 10000000)
-		section_size = 10000000;
-
-	auto new_section = pe.create_section(".vmp0", section_size, IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_CNT_CODE);
-
-	std::vector<obfuscator::input_function_t> input_functions;
-	input_functions.reserve(funcs.size());
-	for (const auto& f : funcs) {
-		obfuscator::input_function_t in{};
-		in.id = f.id;
-		in.offset = f.offset;
-		in.name = f.name;
-		in.size = f.size;
-		in.obfuscate = f.obfuscate;
-		in.ctfflattening = f.ctfflattening;
-		in.movobf = f.movobf;
-		in.mutateobf = f.mutateobf;
-		in.leaobf = f.leaobf;
-		in.antidisassembly = f.antidisassembly;
-		in.iatobf = f.iatobf;
-		in.stringenc = f.stringenc;
-		in.callhideobf = f.callhideobf;
-		in.bcfobf = f.bcfobf;
-		input_functions.push_back(in);
+	catch (const std::exception& e) {
+		std::lock_guard<std::mutex> lk(g_obf_mutex);
+		g_obf_error = e.what();
+	}
+	catch (...) {
+		std::lock_guard<std::mutex> lk(g_obf_mutex);
+		g_obf_error = "Unknown error during obfuscation";
 	}
 
-	obfuscator obf(&pe);
-	obf.create_functions(input_functions);
-	obf.run(new_section, obfuscate_entry_point);
-
-	pe.save_to_disk(std::filesystem::path(binary_path).replace_extension().string() + ".obf" + extension.string(), new_section, obf.get_added_size());
-
+	g_obf_running.store(false);
+	g_obf_done.store(true);
 }

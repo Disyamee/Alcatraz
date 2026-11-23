@@ -3,6 +3,7 @@
 #include "Zydis/Zydis.h"
 
 #include <bit>
+#include <functional>
 #include <map>
 #include <string>
 #include <algorithm>
@@ -142,7 +143,8 @@ public:
 
 	void create_functions(std::vector<input_function_t> functions);
 
-	void run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_point);
+	void run(PIMAGE_SECTION_HEADER new_section, bool obfuscate_entry_point,
+	         std::function<void(int current, int total)> progress_cb = nullptr);
 
 	uint32_t get_added_size();
 
